@@ -1,12 +1,13 @@
 import { createSchema, createYoga } from 'graphql-yoga';
+import { PrismaClient } from '@prisma/client';
 import { PubSub } from 'graphql-subscriptions';
 import { createServer } from 'node:http';
 import fs from 'fs';
-import db from './db.js';
 import Query from './resolvers/Query.js';
 import Mutation from './resolvers/Mutation.js';
 import Subscription from './resolvers/Subscription.js';
 
+const prisma = new PrismaClient();
 export const pubsub = new PubSub();
 
 // Read the schema from a file
@@ -25,8 +26,8 @@ export const schema = createSchema({
 export const yoga = createYoga({
   schema,
   context: {
-    db,
     pubsub,
+    prisma,
   },
 });
 const server = createServer(yoga);

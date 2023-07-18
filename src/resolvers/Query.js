@@ -1,9 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-
 const Query = {
   user: (parent, args, ctx, info) =>
-    prisma.user.findUnique({
+    ctx.prisma.user.findUnique({
       where: {
         id: args.id,
       },
@@ -13,7 +10,7 @@ const Query = {
       },
     }),
   users: (parent, args, ctx, info) =>
-    prisma.user.findMany({
+    ctx.prisma.user.findMany({
       include: {
         posts: true,
         comments: true,
@@ -23,7 +20,7 @@ const Query = {
       },
     }),
   post: (parent, args, ctx, info) =>
-    prisma.post.findUnique({
+    ctx.prisma.post.findUnique({
       where: {
         id: args.id,
       },
@@ -33,7 +30,7 @@ const Query = {
       },
     }),
   posts: (parent, args, ctx, info) =>
-    prisma.post.findMany({
+    ctx.prisma.post.findMany({
       include: {
         author: true,
         comments: true,
@@ -43,7 +40,7 @@ const Query = {
       },
     }),
   comment: (parent, args, ctx, info) =>
-    prisma.comment.findUnique({
+    ctx.prisma.comment.findUnique({
       where: {
         id: args.id,
       },
@@ -53,10 +50,13 @@ const Query = {
       },
     }),
   comments: (parent, args, ctx, info) =>
-    prisma.comment.findMany({
+    ctx.prisma.comment.findMany({
       include: {
         author: true,
         post: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
       },
     }),
 };

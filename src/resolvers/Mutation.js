@@ -1,11 +1,7 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-
 const Mutation = {
   createUser: (parent, args, ctx, info) => {
     const { data } = args;
-    console.log(data);
-    return prisma.user.create({
+    return ctx.prisma.user.create({
       data: {
         email: data.email,
         name: data.name,
@@ -15,7 +11,7 @@ const Mutation = {
   },
   updateUser: (parent, args, ctx, info) => {
     const { id, data } = args;
-    return prisma.user.update({
+    return ctx.prisma.user.update({
       where: {
         id,
       },
@@ -30,14 +26,14 @@ const Mutation = {
     const { id } = args;
 
     // Delete the user's associated posts
-    const posts = await prisma.post.findMany({
+    const posts = await ctx.prisma.post.findMany({
       where: {
         authorId: id,
       },
     });
     // postIds is an array of post ids that we want to delete
     const postIds = posts.map((post) => post.id);
-    await prisma.post.deleteMany({
+    await ctx.prisma.post.deleteMany({
       where: {
         id: {
           in: postIds,
@@ -46,7 +42,7 @@ const Mutation = {
     });
 
     // Delete the user's associated comments
-    const comments = await prisma.comment.findMany({
+    const comments = await ctx.prisma.comment.findMany({
       where: {
         authorId: id,
       },
@@ -54,7 +50,7 @@ const Mutation = {
 
     // commentIds is an array of comment ids that we want to delete
     const commentIds = comments.map((comment) => comment.id);
-    await prisma.comment.deleteMany({
+    await ctx.prisma.comment.deleteMany({
       where: {
         id: {
           in: commentIds,
@@ -63,7 +59,7 @@ const Mutation = {
     });
 
     // Delete the user
-    return prisma.user.delete({
+    return ctx.prisma.user.delete({
       where: {
         id,
       },
@@ -71,7 +67,7 @@ const Mutation = {
   },
   createPost: (parent, args, ctx, info) => {
     const { data } = args;
-    return prisma.post.create({
+    return ctx.prisma.post.create({
       data: {
         title: data.title,
         body: data.body,
@@ -90,7 +86,7 @@ const Mutation = {
   },
   updatePost: (parent, args, ctx, info) => {
     const { id, data } = args;
-    return prisma.post.update({
+    return ctx.prisma.post.update({
       where: {
         id,
       },
@@ -109,7 +105,7 @@ const Mutation = {
     const { id } = args;
 
     // Delete the post's associated comments
-    const comments = await prisma.comment.findMany({
+    const comments = await ctx.prisma.comment.findMany({
       where: {
         postId: id,
       },
@@ -117,7 +113,7 @@ const Mutation = {
 
     // commentIds is an array of comment ids that we want to delete
     const commentIds = comments.map((comment) => comment.id);
-    await prisma.comment.deleteMany({
+    await ctx.prisma.comment.deleteMany({
       where: {
         id: {
           in: commentIds,
@@ -126,7 +122,7 @@ const Mutation = {
     });
 
     // Delete the post
-    return prisma.post.delete({
+    return ctx.prisma.post.delete({
       where: {
         id,
       },
@@ -134,7 +130,7 @@ const Mutation = {
   },
   createComment: (parent, args, ctx, info) => {
     const { data } = args;
-    return prisma.comment.create({
+    return ctx.prisma.comment.create({
       data: {
         text: data.text,
         author: {
@@ -156,7 +152,7 @@ const Mutation = {
   },
   updateComment: (parent, args, ctx, info) => {
     const { id, data } = args;
-    return prisma.comment.update({
+    return ctx.prisma.comment.update({
       where: {
         id,
       },
@@ -171,7 +167,7 @@ const Mutation = {
   },
   deleteComment: (parent, args, ctx, info) => {
     const { id } = args;
-    return prisma.comment.delete({
+    return ctx.prisma.comment.delete({
       where: {
         id,
       },

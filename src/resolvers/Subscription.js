@@ -2,10 +2,12 @@ import { handleErrorMessage } from '../../utils.js';
 
 const Subscription = {
   comment: {
-    subscribe: (parent, { postId }, { db, pubsub }, info) => {
-      const post = db.posts.find(
-        (post) => post.id === postId && post.published
-      );
+    subscribe: (parent, { postId }, { prisma, pubsub }, info) => {
+      const post = prisma.post.findUnique({
+        where: {
+          id: postId,
+        },
+      });
       if (!post) {
         handleErrorMessage('Post not found', 'POST_NOT_FOUND');
       }
