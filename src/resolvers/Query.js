@@ -9,8 +9,36 @@ const Query = {
         comments: true,
       },
     }),
-  users: (parent, args, ctx, info) =>
-    ctx.prisma.user.findMany({
+  users: (parent, args, ctx, info) => {
+    if (args.query) {
+      return ctx.prisma.user.findMany({
+        where: {
+          OR: [
+            {
+              name: {
+                contains: args.query,
+                mode: 'insensitive',
+              },
+            },
+            {
+              email: {
+                contains: args.query,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        },
+        include: {
+          posts: true,
+          comments: true,
+        },
+        orderBy: {
+          name: 'asc',
+        },
+      });
+    }
+
+    return ctx.prisma.user.findMany({
       include: {
         posts: true,
         comments: true,
@@ -18,7 +46,8 @@ const Query = {
       orderBy: {
         name: 'asc',
       },
-    }),
+    });
+  },
   post: (parent, args, ctx, info) =>
     ctx.prisma.post.findUnique({
       where: {
@@ -29,8 +58,36 @@ const Query = {
         comments: true,
       },
     }),
-  posts: (parent, args, ctx, info) =>
-    ctx.prisma.post.findMany({
+  posts: (parent, args, ctx, info) => {
+    if (args.query) {
+      return ctx.prisma.post.findMany({
+        where: {
+          OR: [
+            {
+              title: {
+                contains: args.query,
+                mode: 'insensitive',
+              },
+            },
+            {
+              body: {
+                contains: args.query,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        },
+        include: {
+          author: true,
+          comments: true,
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      });
+    }
+
+    return ctx.prisma.post.findMany({
       include: {
         author: true,
         comments: true,
@@ -38,7 +95,8 @@ const Query = {
       orderBy: {
         updatedAt: 'desc',
       },
-    }),
+    });
+  },
   comment: (parent, args, ctx, info) =>
     ctx.prisma.comment.findUnique({
       where: {
@@ -49,8 +107,30 @@ const Query = {
         post: true,
       },
     }),
-  comments: (parent, args, ctx, info) =>
-    ctx.prisma.comment.findMany({
+  comments: (parent, args, ctx, info) => {
+    if (args.query) {
+      return ctx.prisma.comment.findMany({
+        where: {
+          OR: [
+            {
+              text: {
+                contains: args.query,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        },
+        include: {
+          author: true,
+          post: true,
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      });
+    }
+
+    return ctx.prisma.comment.findMany({
       include: {
         author: true,
         post: true,
@@ -58,7 +138,8 @@ const Query = {
       orderBy: {
         updatedAt: 'desc',
       },
-    }),
+    });
+  },
 };
 
 export default Query;

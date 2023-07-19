@@ -1,60 +1,64 @@
+import { handleErrorMessage } from '../../utils.js';
+
 const Mutation = {
-  createUser: (parent, args, ctx, info) => {
+  createUser: async (parent, args, ctx, info) => {
     const { data } = args;
-    return ctx.prisma.user.create({
-      data: {
-        email: data.email,
-        name: data.name,
-        age: data.age,
-      },
-    });
+    try {
+      return await ctx.prisma.user.create({
+        data: {
+          email: data.email,
+          name: data.name,
+          age: data.age,
+        },
+      });
+    } catch (error) {
+      handleErrorMessage('Email already in use', 'EMAIL_IN_USE');
+    }
   },
-  updateUser: (parent, args, ctx, info) => {
+  updateUser: async (parent, args, ctx, info) => {
     const { id, data } = args;
-    return ctx.prisma.user.update({
-      where: {
-        id,
-      },
-      data: {
-        email: data.email,
-        name: data.name,
-        age: data.age,
-      },
-    });
+    try {
+      return await ctx.prisma.user.update({
+        where: {
+          id,
+        },
+        data: {
+          email: data.email,
+          name: data.name,
+          age: data.age,
+        },
+      });
+    } catch (error) {
+      handleErrorMessage('User update failed', 'USER_UPDATE_FAILED');
+    }
   },
   deleteUser: async (parent, args, ctx, info) => {
     const { id } = args;
 
+    // Check if the ID is provided
+    if (!id) {
+      handleErrorMessage('Id not provided', 'ID_NOT_PROVIDED');
+      return null; // exit the function after handling the error
+    }
+
+    // Check if the user exists
+    const user = await ctx.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      handleErrorMessage('User not found', 'USER_NOT_FOUND');
+      return null; // exit the function after handling the error
+    }
+
     // Delete the user's associated posts
-    const posts = await ctx.prisma.post.findMany({
-      where: {
-        authorId: id,
-      },
-    });
-    // postIds is an array of post ids that we want to delete
-    const postIds = posts.map((post) => post.id);
     await ctx.prisma.post.deleteMany({
       where: {
-        id: {
-          in: postIds,
-        },
+        authorId: id,
       },
     });
 
     // Delete the user's associated comments
-    const comments = await ctx.prisma.comment.findMany({
-      where: {
-        authorId: id,
-      },
-    });
-
-    // commentIds is an array of comment ids that we want to delete
-    const commentIds = comments.map((comment) => comment.id);
     await ctx.prisma.comment.deleteMany({
       where: {
-        id: {
-          in: commentIds,
-        },
+        authorId: id,
       },
     });
 
@@ -65,9 +69,9 @@ const Mutation = {
       },
     });
   },
-  createPost: (parent, args, ctx, info) => {
+  createPost: async (parent, args, ctx, info) => {
     const { data } = args;
-    return ctx.prisma.post.create({
+    return await ctx.prisma.post.create({
       data: {
         title: data.title,
         body: data.body,
@@ -84,9 +88,9 @@ const Mutation = {
       },
     });
   },
-  updatePost: (parent, args, ctx, info) => {
+  updatePost: async (parent, args, ctx, info) => {
     const { id, data } = args;
-    return ctx.prisma.post.update({
+    return await ctx.prisma.post.update({
       where: {
         id,
       },
@@ -104,20 +108,17 @@ const Mutation = {
   deletePost: async (parent, args, ctx, info) => {
     const { id } = args;
 
-    // Delete the post's associated comments
-    const comments = await ctx.prisma.comment.findMany({
-      where: {
-        postId: id,
-      },
-    });
+    // Optional: Check if the post exists
+    const post = await ctx.prisma.post.findUnique({ where: { id } });
+    if (!post) {
+      handleErrorMessage('Post not found', 'POST_NOT_FOUND');
+      return null; // exit the function after handling the error
+    }
 
-    // commentIds is an array of comment ids that we want to delete
-    const commentIds = comments.map((comment) => comment.id);
+    // Delete the post's associated comments directly using postId
     await ctx.prisma.comment.deleteMany({
       where: {
-        id: {
-          in: commentIds,
-        },
+        postId: id,
       },
     });
 
@@ -128,9 +129,9 @@ const Mutation = {
       },
     });
   },
-  createComment: (parent, args, ctx, info) => {
+  createComment: async (parent, args, ctx, info) => {
     const { data } = args;
-    return ctx.prisma.comment.create({
+    return await ctx.prisma.comment.create({
       data: {
         text: data.text,
         author: {
@@ -150,9 +151,9 @@ const Mutation = {
       },
     });
   },
-  updateComment: (parent, args, ctx, info) => {
+  updateComment: async (parent, args, ctx, info) => {
     const { id, data } = args;
-    return ctx.prisma.comment.update({
+    return await ctx.prisma.comment.update({
       where: {
         id,
       },
@@ -165,9 +166,9 @@ const Mutation = {
       },
     });
   },
-  deleteComment: (parent, args, ctx, info) => {
+  deleteComment: async (parent, args, ctx, info) => {
     const { id } = args;
-    return ctx.prisma.comment.delete({
+    return await ctx.prisma.comment.delete({
       where: {
         id,
       },
