@@ -18,6 +18,13 @@ const resolvers = {
   Subscription,
 };
 
+// Create a context function that returns the token from the request headers HTTP
+const getHttpContext = async ({ req }) => ({
+  prisma,
+  pubsub,
+  req,
+});
+
 // Create the GraphQL schema
 export const schema = createSchema({
   typeDefs,
@@ -25,10 +32,7 @@ export const schema = createSchema({
 });
 export const yoga = createYoga({
   schema,
-  context: {
-    pubsub,
-    prisma,
-  },
+  context: getHttpContext,
 });
 const server = createServer(yoga);
 // Start the server and you're done!

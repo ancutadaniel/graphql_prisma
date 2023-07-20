@@ -1,4 +1,4 @@
-import { handleErrorMessage } from '../../utils.js';
+import { handleErrorMessage } from '../utils/handleErrors.js';
 
 const Subscription = {
   comment: {
