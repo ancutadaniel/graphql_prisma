@@ -158,13 +158,23 @@ const Mutation = {
         },
       });
     }
+
+    // If the post's authorId matches the userId, notify subscribers.
+    if (post.authorId === userId) {
+      ctx.pubsub.publish(`myPost:${userId}`, {
+        myPosts: {
+          mutation: 'CREATED',
+          data: post,
+        },
+      });
+    }
+
     return post;
   },
   updatePost: async (parent, args, ctx, info) => {
     const { id, data } = args;
     const userId = getUserId(ctx.req);
 
-    // Check if the post exists and belongs to the user
     const existingPost = await ctx.prisma.post.findUnique({
       where: {
         id,
@@ -177,31 +187,31 @@ const Mutation = {
         'Post not found or you are not authorized to update it.',
         'POST_NOT_FOUND'
       );
+      return; // This early return is important to stop execution.
     }
 
-    let updatedPost;
+    // If post was previously published and is now set to unpublished, delete its comments.
+    if (existingPost.published && !data.published) {
+      await ctx.prisma.comment.deleteMany({ where: { postId: id } });
+    }
+
     try {
-      updatedPost = await ctx.prisma.post.update({
-        where: {
-          id,
-          authorId: userId,
-        },
-        data: {
-          ...data,
-        },
+      const updatedPost = await ctx.prisma.post.update({
+        where: { id, authorId: userId },
+        data,
         include: {
           author: true,
           comments: true,
         },
       });
 
-      // Publish an update if the post is published
+      // Publish update to respective channels
       if (updatedPost.published) {
-        ctx.pubsub.publish(`post`, {
-          post: {
-            mutation: 'UPDATED',
-            data: updatedPost,
-          },
+        ctx.pubsub.publish('post', {
+          post: { mutation: 'UPDATED', data: updatedPost },
+        });
+        ctx.pubsub.publish(`myPost:${userId}`, {
+          myPosts: { mutation: 'UPDATED', data: updatedPost },
         });
       }
 

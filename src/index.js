@@ -6,6 +6,7 @@ import fs from 'fs';
 import Query from './resolvers/Query.js';
 import Mutation from './resolvers/Mutation.js';
 import Subscription from './resolvers/Subscription.js';
+import User from './resolvers/User.js';
 
 const prisma = new PrismaClient();
 export const pubsub = new PubSub();
@@ -16,6 +17,7 @@ const resolvers = {
   Query,
   Mutation,
   Subscription,
+  User,
 };
 
 // Create a context function that returns the token from the request headers HTTP
