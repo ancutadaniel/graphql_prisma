@@ -35,9 +35,32 @@ const Query = {
     });
   },
   users: (parent, args, ctx, info) => {
-    if (args.query) {
-      return ctx.prisma.user.findMany({
-        where: {
+    // Default sorting
+    let orderBy = { name: 'asc' };
+
+    if (args.sortField && args.sortOrder) {
+      orderBy = {
+        [args.sortField]: args.sortOrder,
+      };
+    }
+
+    const paginationArgs = {
+      skip: args.after ? 1 : args.skip,
+      take: args.take,
+      include: {
+        posts: true,
+        comments: true,
+      },
+      orderBy: orderBy, // Use dynamic order based on arguments
+      cursor: args.after
+        ? {
+            id: args.after,
+          }
+        : undefined,
+    };
+
+    const whereArgs = args.query
+      ? {
           OR: [
             {
               name: {
@@ -46,25 +69,12 @@ const Query = {
               },
             },
           ],
-        },
-        include: {
-          posts: true,
-          comments: true,
-        },
-        orderBy: {
-          name: 'asc',
-        },
-      });
-    }
+        }
+      : {};
 
     return ctx.prisma.user.findMany({
-      include: {
-        posts: true,
-        comments: true,
-      },
-      orderBy: {
-        name: 'asc',
-      },
+      ...paginationArgs,
+      where: whereArgs,
     });
   },
   post: async (parent, args, ctx, info) => {
@@ -105,9 +115,14 @@ const Query = {
     return posts[0];
   },
   posts: async (parent, args, ctx, info) => {
-    let where = {
-      published: true,
-    };
+    console.log('args', args);
+    const userId = getUserId(ctx.req, false);
+
+    let where = {};
+
+    if (!userId) {
+      where.published = true;
+    }
 
     if (args.query) {
       where.OR = [
@@ -126,16 +141,32 @@ const Query = {
       ];
     }
 
-    return await ctx.prisma.post.findMany({
+    // Default sorting
+    let orderBy = { updatedAt: 'asc' };
+
+    if (args.sortField && args.sortOrder) {
+      orderBy = {
+        [args.sortField]: args.sortOrder,
+      };
+    }
+
+    const postArgs = {
       where,
       include: {
         author: true,
         comments: true,
       },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    });
+      orderBy: orderBy,
+      skip: args.after ? 1 : args.skip,
+      take: args.take,
+      cursor: args.after
+        ? {
+            id: args.after,
+          }
+        : undefined,
+    };
+
+    return await ctx.prisma.post.findMany(postArgs);
   },
   comment: async (parent, args, ctx, info) =>
     await ctx.prisma.comment.findUnique({
@@ -157,16 +188,31 @@ const Query = {
         }
       : {};
 
-    return await ctx.prisma.comment.findMany({
+    let orderBy = { updatedAt: 'desc' }; // default sorting
+
+    if (args.sortField && args.sortOrder) {
+      orderBy = {
+        [args.sortField]: args.sortOrder,
+      };
+    }
+
+    const commentArgs = {
       where: searchWhere,
       include: {
         author: true,
         post: true,
       },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    });
+      orderBy: orderBy,
+      skip: args.after ? 1 : args.skip,
+      take: args.take,
+      cursor: args.after
+        ? {
+            id: args.after,
+          }
+        : undefined,
+    };
+
+    return await ctx.prisma.comment.findMany(commentArgs);
   },
   myPosts: async (parent, args, ctx, info) => {
     const userId = getUserId(ctx.req);
@@ -198,6 +244,14 @@ const Query = {
         }
       : {};
 
+    let orderBy = { updatedAt: 'desc' }; // default sorting
+
+    if (args.sortField && args.sortOrder) {
+      orderBy = {
+        [args.sortField]: args.sortOrder,
+      };
+    }
+
     const posts = await ctx.prisma.post.findMany({
       where: {
         ...baseWhere,
@@ -207,9 +261,14 @@ const Query = {
         author: true,
         comments: true,
       },
-      orderBy: {
-        updatedAt: 'desc',
-      },
+      orderBy: orderBy,
+      skip: args.after ? 1 : args.skip,
+      take: args.take,
+      cursor: args.after
+        ? {
+            id: args.after,
+          }
+        : undefined,
     });
 
     if (posts.length === 0) {

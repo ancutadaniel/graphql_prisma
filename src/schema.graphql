@@ -1,12 +1,40 @@
 type Query {
   me: User!
   user: User!
-  users(query: String): [User!]!
+  users(
+    query: String
+    skip: Int
+    take: Int
+    after: String
+    sortField: String
+    sortOrder: String
+  ): [User!]!
   post(id: String!): Post!
-  posts(query: String): [Post!]!
+  posts(
+    query: String
+    skip: Int
+    take: Int
+    after: String
+    sortField: String
+    sortOrder: String
+  ): [Post!]!
   comment(id: String!): Comment!
-  comments(query: String): [Comment!]!
-  myPosts(query: String): [Post!]!
+  comments(
+    query: String
+    skip: Int
+    take: Int
+    after: String
+    sortField: String
+    sortOrder: String
+  ): [Comment!]!
+  myPosts(
+    query: String
+    skip: Int
+    take: Int
+    after: String
+    sortField: String
+    sortOrder: String
+  ): [Post!]!
 }
 
 type Mutation {
@@ -46,6 +74,8 @@ type User {
   age: Int
   posts: [Post!]!
   comments: [Comment!]!
+  updatedAt: String!
+  createdAt: String!
 }
 
 type Post {
@@ -55,6 +85,8 @@ type Post {
   published: Boolean!
   author: User!
   comments: [Comment!]!
+  updatedAt: String!
+  createdAt: String!
 }
 
 type Comment {
@@ -62,6 +94,8 @@ type Comment {
   text: String!
   author: User!
   post: Post!
+  updatedAt: String!
+  createdAt: String!
 }
 
 input CreateUserInput {
